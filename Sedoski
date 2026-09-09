@@ -1,0 +1,131 @@
+import os
+
+import random
+
+from telegram import Update
+
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+# ==============================
+
+# SEDOSKI PREDICTION BOT
+
+# ==============================
+
+TOKEN = os.getenv("BOT_TOKEN")
+
+if not TOKEN:
+
+    raise ValueError("Le TOKEN du bot n'est pas configuré.")
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    message = """
+
+🤖 SEDOSKI PREDICTION BOT
+
+Bienvenue sur le bot officiel de prédictions football ⚽
+
+Commandes disponibles :
+
+/start - Démarrer le bot
+
+/help - Afficher l'aide
+
+/prediction - Obtenir une prédiction
+
+🔥 SEDOSKI FOOTBALL PREDICTIONS
+
+    """
+
+    await update.message.reply_text(message)
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    message = """
+
+📚 AIDE SEDOSKI
+
+⚽ /prediction
+
+Obtenir une prédiction football.
+
+🏠 /start
+
+Retourner au menu principal.
+
+Les prédictions sont indicatives et ne garantissent pas le résultat d'un match.
+
+    """
+
+    await update.message.reply_text(message)
+
+async def prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    equipes = [
+
+        ("Équipe A", "Équipe B"),
+
+        ("Équipe C", "Équipe D"),
+
+        ("Équipe E", "Équipe F")
+
+    ]
+
+    equipe1, equipe2 = random.choice(equipes)
+
+    choix = random.choice([
+
+        f"Victoire {equipe1}",
+
+        f"Victoire {equipe2}",
+
+        "Match nul"
+
+    ])
+
+    score1 = random.randint(0, 3)
+
+    score2 = random.randint(0, 3)
+
+    message = f"""
+
+⚽ SEDOSKI PREDICTION
+
+🏆 {equipe1} 🆚 {equipe2}
+
+🔮 Pronostic : {choix}
+
+📊 Score probable : {score1} - {score2}
+
+💡 Analyse :
+
+• Forme : à analyser
+
+• Attaque : à analyser
+
+• Défense : à analyser
+
+⚠️ Prédiction indicative uniquement.
+
+"""
+
+    await update.message.reply_text(message)
+
+def main():
+
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+
+    app.add_handler(CommandHandler("help", help_command))
+
+    app.add_handler(CommandHandler("prediction", prediction))
+
+    print("🤖 SEDOSKI PREDICTION BOT démarré !")
+
+    app.run_polling()
+
+if __name__ == "__main__":
+
+    main()
