@@ -1,12 +1,12 @@
-
 import os
-import asyncio
+import threading
+
 from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # ==============================
-# SEDOSKI PREDICTION BOT
+# SEDOSKI PREDICTIONS BOT
 # ==============================
 
 TOKEN = os.environ.get("BOT_TOKEN")
@@ -14,11 +14,21 @@ TOKEN = os.environ.get("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("BOT_TOKEN n'est pas configuré.")
 
-# Flask pour le Web Service
+# ==============================
+# FLASK - SERVEUR WEB
+# ==============================
+
 app = Flask(__name__)
 
-# Application Telegram
-telegram_app = Application.builder().token(TOKEN).build()
+
+@app.route("/")
+def home():
+    return "SEDOSKI Predictions Bot is running!"
+
+
+def run_flask():
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
 
 # ==============================
@@ -30,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚽ Bienvenue sur SEDOSKI PREDICTIONS !\n\n"
         "🤖 Bot de prédictions football.\n\n"
         "Utilise /predict pour commencer.\n"
-        "Utilise /today pour voir les matchs du jour.\n"
+        "Utilise /today pour les matchs du jour.\n"
         "Utilise /help pour voir les commandes."
     )
 
@@ -38,9 +48,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🔮 SEDOSKI PREDICTIONS\n\n"
-        "Envoie-moi le match sous cette forme :\n\n"
+        "Envoie le match sous cette forme :\n\n"
         "PSG vs Marseille\n\n"
-        "📊 Une analyse pourra ensuite être effectuée."
+        "📊 L'analyse du match sera effectuée."
     )
 
 
@@ -64,8 +74,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==============================
-# AJOUT DES COMMANDES
+# APPLICATION TELEGRAM
 # ==============================
+
+telegram_app = Application.builder().token(TOKEN).build()
 
 telegram_app.add_handler(CommandHandler("start", start))
 telegram_app.add_handler(CommandHandler("predict", predict))
@@ -74,27 +86,14 @@ telegram_app.add_handler(CommandHandler("help", help_command))
 
 
 # ==============================
-# ROUTE WEB
+# DÉMARRAGE
 # ==============================
 
-@app.route("/")
-def home():
-    return "SEDOSKI Predictions Bot is running!"
-
-
-# ==============================
-# DEMARRAGE DU BOT
-# ==============================
-
-async def run_bot():
-    await telegram_app.initialize()
-    await telegram_app.start()
-    await telegram_app.updater.start_polling()
+if __name__ == "__main__":
+    # Démarre Flask dans un autre thread
+    threading.Thread(target=run_flask, daemon=True).start()
 
     print("🤖 SEDOSKI PREDICTIONS BOT démarré !")
 
-    await asyncio.Event().wait()
-
-
-if __name__ == "__main__":
-    asyncio.run(run_bot())
+    # Démarre Telegram
+    telegram_app.run_polling()
